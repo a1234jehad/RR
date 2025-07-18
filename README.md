@@ -1,153 +1,169 @@
-# RR - Media Automation Pipeline
+# RR - Complete Media Automation Stack
 
-A complete Docker-based media automation pipeline for managing your movie and TV show collection.
+A comprehensive Docker-based media automation pipeline for movies and TV shows with automatic downloading, organizing, subtitle management, and indexer integration.
 
-## 🎯 Overview
+## 🎯 What This Does
 
-This project sets up a comprehensive media automation stack using Docker containers. The pipeline includes automated downloading, organizing, and management of your media library.
+- **Automatically downloads** movies and TV shows when you add them
+- **Manages quality** and upgrades when better versions are available  
+- **Downloads subtitles** automatically in your preferred languages
+- **Organizes everything** with proper naming and folder structure
+- **Handles indexers** centrally so you configure them once
+- **Enables fast moves** and hard links to avoid duplicate files
 
-## 📋 Requirements
+## 📦 Complete Stack
 
-### System Requirements
+| Service | Purpose | Port | Access URL |
+|---------|---------|------|------------|
+| **Radarr** | Movie Management | 7878 | http://localhost:7878 |
+| **Sonarr** | TV Show Management | 8989 | http://localhost:8989 |
+| **Prowlarr** | Indexer Management | 9696 | http://localhost:9696 |
+| **Bazarr** | Subtitle Management | 6767 | http://localhost:6767 |
+| **qBittorrent** | Download Client | 8080 | http://localhost:8080 |
 
-- **Operating System**: Windows 10/11
-- **Docker Desktop**: Latest version with WSL2 backend enabled
-- **PowerShell**: Windows PowerShell 5.1+ or PowerShell Core 7+
-- **Storage**: Sufficient disk space for your media library
-
-### Docker Setup
-
-1. **Install Docker Desktop for Windows**
-
-   - Download from [docker.com](https://www.docker.com/products/docker-desktop/)
-   - Enable WSL2 integration during installation
-   - Restart your computer after installation
-
-2. **Verify Docker Installation**
-
-   ```powershell
-   docker --version
-   docker run hello-world
-   ```
-
-3. **Configure Docker Resources**
-   - Open Docker Desktop settings
-   - Allocate sufficient RAM (8GB+ recommended)
-   - Ensure file sharing is enabled for your data directories
-
-## 🏗️ Architecture
-
-The pipeline uses a single common volume structure (`/data`) to enable:
-
-- **Fast moves** between download and media folders
-- **Hard links** for seeding torrents without duplicating files
-- **Consistent paths** across all containers
-
-### Directory Structure
+## 🏗️ Directory Structure
 
 ```
 C:\docker\data\
-├── Movies\              # Radarr managed movies
-├── TV\                  # Sonarr managed TV shows
+├── Movies\              # Your movie library (managed by Radarr)
+├── TV Shows\            # Your TV series library (managed by Sonarr)  
 └── downloads\
     ├── torrents\        # qBittorrent downloads
-    ├── usenet\          # SABnzbd downloads
-    └── complete\        # Completed downloads
+    └── usenet\          # SABnzbd downloads (optional)
 ```
 
-## 🚀 Services
+## 🚀 Quick Setup
 
-### Currently Available
+### 1. Prerequisites
+- Windows 10/11 with Docker Desktop installed
+- PowerShell (any version)
+- At least 8GB RAM recommended
 
-- **Radarr** - Movie collection manager
-  - Port: `7878`
-  - Script: `run-radarr.ps1`
-
-### Coming Soon
-
-- **Sonarr** - TV show collection manager
-- **qBittorrent** - Torrent download client
-- **SABnzbd** - Usenet download client
-- **Prowlarr** - Indexer manager
-- **Jellyfin/Plex** - Media server
-- **Overseerr** - Request management
-
-## 📦 Installation
-
-### 1. Clone Repository
-
+### 2. Clone & Setup
 ```powershell
 git clone <repository-url>
 cd RR
-```
 
-### 2. Configure Paths
-
-Edit the path variables in each service script:
-
-```powershell
-$hostDataPath = "C:\docker\data"          # Your media storage location
-$hostConfigPath = "C:\docker\radarr\config"  # Configuration storage
-```
-
-### 3. Create Directory Structure
-
-```powershell
-# Create required directories
+# Create directories (optional - scripts will create them)
 New-Item -ItemType Directory -Force -Path "C:\docker\data\Movies"
-New-Item -ItemType Directory -Force -Path "C:\docker\data\TV"
+New-Item -ItemType Directory -Force -Path "C:\docker\data\TV Shows"
 New-Item -ItemType Directory -Force -Path "C:\docker\data\downloads\torrents"
-New-Item -ItemType Directory -Force -Path "C:\docker\data\downloads\usenet"
-New-Item -ItemType Directory -Force -Path "C:\docker\data\downloads\complete"
 ```
 
-### 4. Start Services
-
+### 3. Start Services (Run in Order)
 ```powershell
-# Start Radarr
-.\run-radarr.ps1
+# 1. Core services
+.\run-radarr.ps1        # Movie management
+.\run-sonarr.ps1        # TV show management
 
-# Additional services (when available)
-# .\run-sonarr.ps1
-# .\run-qbittorrent.ps1
-# .\run-sabnzbd.ps1
+# 2. Supporting services  
+.\run-prowlarr.ps1      # Indexer management
+.\run-bazarr.ps1        # Subtitle management
+
+# 3. Download client (command shown in radarr script output)
+# Copy the qBittorrent command from the script output and run it
 ```
 
-## ⚙️ Configuration
+## ⚙️ Configuration Guide
 
-### Service URLs
+### Step 1: Setup Download Client (qBittorrent)
+1. Run the qBittorrent command from Radarr script output
+2. Access http://localhost:8080
+3. Default login: `admin` / `adminadmin`
+4. Change password in settings
 
-- **Radarr**: http://localhost:7878
-- **Sonarr**: http://localhost:8989 _(coming soon)_
-- **qBittorrent**: http://localhost:8080 _(coming soon)_
-- **SABnzbd**: http://localhost:8081 _(coming soon)_
+### Step 2: Setup Indexer Management (Prowlarr)
+1. Access http://localhost:9696
+2. Add indexers (YTS, 1337x, TorrentGalaxy, etc.)
+3. Add applications:
+   - **Radarr**: `http://radarr:7878` + API key
+   - **Sonarr**: `http://sonarr:8989` + API key
+
+### Step 3: Setup Subtitle Management (Bazarr)  
+1. Access http://localhost:6767
+2. Complete setup wizard
+3. Add subtitle providers (OpenSubtitles, Subscene, etc.)
+4. Connect to:
+   - **Radarr**: `http://radarr:7878` + API key
+   - **Sonarr**: `http://sonarr:8989` + API key
+
+### Step 4: Configure Download Clients in Radarr/Sonarr
+- **Host**: `qbittorrent` (not localhost)
+- **Port**: `8080`
+- **Category**: Set different categories for movies vs TV
+
+## 🔑 Getting API Keys
+
+API keys are needed to connect services together:
+
+1. **Radarr**: Settings → General → Security → Copy API Key
+2. **Sonarr**: Settings → General → Security → Copy API Key
+
+Use these keys when configuring Prowlarr and Bazarr connections.
+
+## 🔧 Important Configuration Notes
+
+### Container Communication
+- Services communicate using **container names**, not `localhost`
+- Use `radarr:7878`, `sonarr:8989`, `qbittorrent:8080`, etc.
+- All containers run on the `media-stack` Docker network
 
 ### Path Configuration
-
-When configuring each service, use these paths:
-
-#### Radarr Settings
-
+When configuring paths in each service:
 - **Movies**: `/data/Movies`
-- **Download Client**: Point to `/data/downloads/torrents` or `/data/downloads/usenet`
+- **TV Shows**: `/data/TV Shows`  
+- **Downloads**: `/data/downloads/torrents`
 
-#### Future Sonarr Settings
+### Quality Profiles
+- **Movies**: HD-720p/1080p recommended
+- **TV Shows**: Configure per-series preferences
+- **Upgrades**: Enable automatic quality upgrades
 
-- **TV Shows**: `/data/TV`
-- **Download Client**: Point to `/data/downloads/torrents` or `/data/downloads/usenet`
+## 📁 Available Scripts
 
-## 📝 Scripts
+| Script | Service | Purpose |
+|--------|---------|---------|
+| `run-radarr.ps1` | Radarr | Movie collection management |
+| `run-sonarr.ps1` | Sonarr | TV show collection management |
+| `run-prowlarr.ps1` | Prowlarr | Centralized indexer management |
+| `run-bazarr.ps1` | Bazarr | Automatic subtitle downloads |
 
-| Script                | Service     | Port | Status         |
-| --------------------- | ----------- | ---- | -------------- |
-| `run-radarr.ps1`      | Radarr      | 7878 | ✅ Available   |
-| `run-sonarr.ps1`      | Sonarr      | 8989 | 🚧 Coming Soon |
-| `run-qbittorrent.ps1` | qBittorrent | 8080 | 🚧 Coming Soon |
-| `run-sabnzbd.ps1`     | SABnzbd     | 8081 | 🚧 Coming Soon |
+## 🎯 How It All Works Together
 
-## 📚 Resources
+1. **Add Content**: Add movies to Radarr, TV shows to Sonarr
+2. **Automatic Search**: Prowlarr provides indexers to both services
+3. **Download**: qBittorrent downloads the content  
+4. **Organization**: Radarr/Sonarr move files to proper locations
+5. **Subtitles**: Bazarr automatically downloads subtitles
+6. **Quality**: Services monitor for better quality releases
 
-- [Radarr Documentation](https://wiki.servarr.com/radarr)
-- [Sonarr Documentation](https://wiki.servarr.com/sonarr)
-- [Docker Documentation](https://docs.docker.com/)
-- [TRaSH Guides](https://trash-guides.info/) - Excellent setup guides
+## 🔍 Troubleshooting
+
+### Connection Issues
+- Use container names (`radarr:7878`) not `localhost` when configuring connections
+- Ensure all containers are on the `media-stack` network
+- Verify API keys are correct
+
+### Download Issues  
+- Check indexer configuration in Prowlarr
+- Verify download client settings use container hostname
+- Ensure proper categories are set
+
+### Path Issues
+- All services must use `/data/` paths, not `C:\docker\data\`
+- Verify volume mounts are correct
+- Check directory permissions
+
+## 📚 Additional Resources
+
+- [TRaSH Guides](https://trash-guides.info/) - Comprehensive setup guides
+- [Radarr Wiki](https://wiki.servarr.com/radarr) - Official documentation  
+- [Sonarr Wiki](https://wiki.servarr.com/sonarr) - Official documentation
+- [Docker Documentation](https://docs.docker.com/) - Container help
+
+## ⚠️ Important Notes
+
+- **Update paths** in scripts to match your preferred directories
+- **Backup configurations** regularly  
+- **Monitor disk space** - automated downloading can fill drives quickly
+- **Use VPN** if required in your region
